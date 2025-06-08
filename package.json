@@ -1,6 +1,5 @@
 {
-  "name": "donewithit",
-  "license": "0BSD",
+  "name": "recipebook",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -10,10 +9,21 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/vector-icons": "^14.1.0",
+    "@react-navigation/bottom-tabs": "^7.3.14",
+    "@react-navigation/native": "^7.1.10",
+    "@react-navigation/stack": "^7.3.3",
     "expo": "~53.0.10",
     "expo-status-bar": "~2.2.3",
+    "formik": "^2.4.6",
     "react": "19.0.0",
-    "react-native": "0.79.3"
+    "react-native": "0.79.3",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1",
+    "yup": "^1.6.1",
+    "react-dom": "19.0.0",
+    "react-native-web": "^0.20.0",
+    "@expo/metro-runtime": "~5.0.4"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

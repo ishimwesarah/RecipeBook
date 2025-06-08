@@ -70,11 +70,7 @@ Once the development server is running, a QR code will be displayed in your term
 | :---: |
 | ![Profile Screen](docs/screenshots/ProfileScreen.jpg) |
 
-## 🎬 Demo
 
-*(Optional: This is a great place to add a GIF showcasing the app's functionality. You can use tools like ScreenToGif (Windows), GIPHY Capture (Mac), or LiceCap (Cross-platform) to record your screen and save it as `demo.gif` in the `docs` folder.)*
-
-![App Demo GIF](docs/demo.gif)
 
 ## 🤔 Challenges & Learnings
 

@@ -56,7 +56,7 @@ Once the development server is running, a QR code will be displayed in your term
 
 | Login Screen | Signup Screen |
 | :---: |:---:|
-| ![Login Screen](docs/screenshots/LoginForm) | ![Signup Screen](docs/screenshots/SignUpForm.jpg) |
+| ![Login Screen](docs/screenshots/LoginForm.jpg) | ![Signup Screen](docs/screenshots/SignUpForm.jpg) |
 
 | Recipe List | Recipe Detail |
 | :---: |:---:|

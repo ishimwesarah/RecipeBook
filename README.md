@@ -87,3 +87,10 @@ Building this application provided several valuable learning opportunities.
 3.  **Challenge: Keyboard Hiding Form Inputs**
     -   **Problem:** On smaller screens, when the keyboard appeared to fill out the `Profile` or `Add Recipe` forms, it would cover the input field being typed in.
     -   **Solution:** This was solved by wrapping the form screens in React Native's `<KeyboardAvoidingView>` component. By setting its `behavior` prop to `"padding"` on iOS and `"height"` on Android, the view automatically adjusts its layout to ensure the active input remains visible above the keyboard.
+
+    ## QR Code for testing
+this is the QR code generated from expo for testing the app
+
+| QR Code |
+| :---: |:---:|
+| ![QR Code](docs/screenshots/QRCode.png) | 

@@ -35,7 +35,7 @@ const RECIPES = [
 
 const USER_PROFILE = {
     name: 'Text',
-    email: 'alex.doe@example.com',
+    email: 'Sarah@example.com',
     bio: 'A passionate home cook exploring new flavors and sharing my journey.',
     profilePictureUrl:  'https://i.pinimg.com/736x/a0/dd/1b/a0dd1b06ffb50116537e15d377fa3b11.jpg',
 };

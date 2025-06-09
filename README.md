@@ -92,5 +92,5 @@ Building this application provided several valuable learning opportunities.
 this is the QR code generated from expo for testing the app
 
 | QR Code |
-| :---: |:---:|
+| :---: |
 | ![QR Code](docs/screenshots/QRCode.png) | 

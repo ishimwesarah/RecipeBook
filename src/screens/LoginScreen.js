@@ -9,6 +9,7 @@ import {
   Keyboard,
   ScrollView,
   Alert,
+  TouchableOpacity,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Formik } from "formik";
@@ -91,6 +92,9 @@ const LoginScreen = () => {
               </>
             )}
           </Formik>
+          <TouchableOpacity style={styles.forgotPasswordButton} onPress={() => navigation.navigate('ForgotPassword')}>
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
         </ScrollView>
       </TouchableWithoutFeedback>
     </SafeAreaView>
@@ -111,6 +115,14 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
     marginBottom: 40,
+  },
+   forgotPasswordButton: {
+    alignItems: 'center',
+    padding: 15,
+  },
+  forgotPasswordText: {
+    color: '#4CAF50',
+    fontSize: 14,
   },
   buttonContainer: { marginTop: 10, marginBottom: 20 },
 });

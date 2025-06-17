@@ -172,6 +172,39 @@ export const AppProvider = ({ children }) => {
     setShoppingList(prev => prev.filter(i => i.id !== itemId));
   };
 
+  const forgotPassword = async (email) => {
+    // This function just calls the API and lets the UI handle the response.
+    return api.requestPasswordReset(email);
+  };
+
+  const performPasswordReset = async (token, newPassword) => {
+    return api.resetPassword(token, newPassword);
+  };
+  const updateNewsletter = async (postId, payload) => {
+    if (user?.role !== 'admin') throw new Error("Not authorized");
+    try {
+      await api.updateNewsletterById(postId, payload);
+      // Re-fetch the list for perfect sync
+      const newsletterResponse = await api.getNewsletters();
+      setNewsletters(newsletterResponse?.data?.posts || []);
+    } catch (error) {
+      console.error("Failed to update newsletter:", error);
+      throw error;
+    }
+  };
+
+  const deleteNewsletter = async (postId) => {
+    if (user?.role !== 'admin') throw new Error("Not authorized");
+    try {
+      await api.deleteNewsletterById(postId);
+      // Remove from local state for instant UI feedback
+      setNewsletters(prev => prev.filter(p => p.id !== postId));
+    } catch (error) {
+      console.error("Failed to delete newsletter:", error);
+      throw error;
+    }
+  };
+
   
   const value = {
   
@@ -184,11 +217,15 @@ export const AppProvider = ({ children }) => {
    
     login,
     signup,
+    forgotPassword,
+    performPasswordReset,
     logout,
     addRecipe,
     updateRecipe,
     deleteRecipe,
     addNewsletter,
+    updateNewsletter,
+    deleteNewsletter,
     toggleLike,
     addComment,
     updateComment,
@@ -196,6 +233,8 @@ export const AppProvider = ({ children }) => {
     addToShoppingList,
     toggleShoppingListItem,
     deleteShoppingListItem,
+
+    
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

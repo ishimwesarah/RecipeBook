@@ -1,7 +1,7 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_BASE_URL = "http://192.168.1.66:8080/";
+const API_BASE_URL = "http://192.168.1.122:8080/";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -85,20 +85,10 @@ export const deleteCommentById = async (commentId) => {
 };
 
 export const createNewsletter = async (formData) => {
-  try {
-    const response = await apiClient.post("/posts/add", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error(
-      "API Error creating newsletter:",
-      error.response?.data || error.message
-    );
-    throw error;
-  }
+  const response = await apiClient.post('/posts/add', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
 };
 
 export const getMyShoppingList = async () => {
@@ -119,5 +109,26 @@ export const toggleShoppingListItemById = async (itemId) => {
 export const deleteShoppingListItemById = async (itemId) => {
   await apiClient.delete(`/shopping/${itemId}`);
 };
+export const requestPasswordReset = async (email) => {
+  const response = await apiClient.post('/auth/forgot-password', { email });
+  return response.data;
+};
+
+// Calls POST /auth/reset-password/:token
+export const resetPassword = async (token, newPassword) => {
+  const response = await apiClient.post(`/auth/reset-password/${token}`, { newPassword });
+  return response.data;
+};
+export const updateNewsletterById = async (id, payload) => {
+  // This will send a standard JSON body, not FormData, as image handling is separate
+  const response = await apiClient.put(`/posts/${id}`, payload);
+  return response.data;
+};
+
+// DELETE: Calls DELETE /posts/:id
+export const deleteNewsletterById = async (id) => {
+  await apiClient.delete(`/posts/${id}`);
+};
+
 
 export default apiClient;

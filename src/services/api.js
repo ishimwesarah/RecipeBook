@@ -114,21 +114,42 @@ export const requestPasswordReset = async (email) => {
   return response.data;
 };
 
-// Calls POST /auth/reset-password/:token
+
 export const resetPassword = async (token, newPassword) => {
   const response = await apiClient.post(`/auth/reset-password/${token}`, { newPassword });
   return response.data;
 };
 export const updateNewsletterById = async (id, payload) => {
-  // This will send a standard JSON body, not FormData, as image handling is separate
+ 
   const response = await apiClient.put(`/posts/${id}`, payload);
   return response.data;
 };
 
-// DELETE: Calls DELETE /posts/:id
+
 export const deleteNewsletterById = async (id) => {
   await apiClient.delete(`/posts/${id}`);
 };
+
+export const getAllUsers = async () => {
+  const response = await apiClient.get('/users');
+  return response.data;
+};
+
+export const updateUserProfile = async (userId, profileData) => {
+ 
+  const response = await apiClient.put(`/users/${userId}`, profileData);
+  return response.data;
+};
+
+export const changeUserRoleById = async (userId, role) => {
+  const response = await apiClient.patch(`/users/${userId}/role`, { role });
+  return response.data;
+};
+export const deleteUserById = async (userId) => {
+  await apiClient.delete(`/users/${userId}`);
+};
+
+// ...
 
 
 export default apiClient;

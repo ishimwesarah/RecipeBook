@@ -79,31 +79,34 @@ export const AppProvider = ({ children }) => {
 
 
   const addRecipe = async (recipeData) => {
-    if (user?.role !== 'admin') throw new Error("Not authorized");
+    if (user?.role !== 'admin'|| user?.role === 'super_admin') throw new Error("Not authorized");
     const newRecipe = await api.createRecipe(recipeData);
     setRecipes(prev => [...prev, newRecipe.data]);
   };
 
   const updateRecipe = async (recipeId, updatedData) => {
-    if (user?.role !== 'admin') throw new Error("Not authorized");
+    if (user?.role !== 'admin'|| user?.role === 'super_admin') throw new Error("Not authorized");
     const updatedRecipe = await api.updateRecipeById(recipeId, updatedData);
     setRecipes(prev => prev.map(r => r.id === recipeId ? updatedRecipe.data : r));
   };
   
   const deleteRecipe = async (recipeId) => {
-    if (user?.role !== 'admin') throw new Error("Not authorized");
+    if (user?.role !== 'admin'|| user?.role === 'super_admin') throw new Error("Not authorized");
     await api.deleteRecipeById(recipeId);
     setRecipes(prev => prev.filter(r => r.id !== recipeId));
   };
 
   const addNewsletter = async (formData) => {
-    if (user?.role !== 'admin') throw new Error("Not authorized");
+    // This check now correctly allows both admin and super_admin
+    const isAdminOrSuperAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+    if (!isAdminOrSuperAdmin) {
+      throw new Error("You are not authorized to perform this action.");
+    }
     await api.createNewsletter(formData);
-    
+    // Re-fetch the list to ensure perfect sync
     const updatedNewslettersResponse = await api.getNewsletters();
     setNewsletters(updatedNewslettersResponse?.data?.posts || []);
   };
-
   
   const toggleLike = async (recipeId) => {
     if (!user) {
@@ -205,6 +208,47 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const updateUserProfile = async (userId, profileData) => {
+  try {
+    const response = await api.updateUserProfile(userId, profileData);
+    // Update the currently logged-in user's data in the state
+    setUser(response.data.user);
+    await AsyncStorage.setItem('userData', JSON.stringify(response.data.user));
+    return response.data;
+  } catch (error) {
+    console.error("Failed to update profile:", error);
+    throw error;
+  }
+};
+
+// --- ✅ NEW FUNCTIONS FOR SUPER ADMIN ---
+const fetchAllUsers = async () => {
+  try {
+    const response = await api.getAllUsers();
+    return response.data?.users || [];
+  } catch (error) {
+    console.error("Failed to fetch users:", error);
+    return [];
+  }
+};
+
+const changeUserRole = async (userId, role) => {
+  try {
+    await api.changeUserRoleById(userId, role);
+  } catch (error) {
+    console.error("Failed to change role:", error);
+    throw error;
+  }
+};
+  const deleteUser = async (userId) => {
+    await api.deleteUserById(userId);
+  };
+  
+  const toggleUserActiveState = async (userId, currentState) => {
+    await api.updateUserById(userId, { isActive: !currentState });
+  };
+
+
   
   const value = {
   
@@ -233,6 +277,11 @@ export const AppProvider = ({ children }) => {
     addToShoppingList,
     toggleShoppingListItem,
     deleteShoppingListItem,
+    updateUserProfile, 
+    fetchAllUsers, 
+    changeUserRole,
+    deleteUser,
+    toggleUserActiveState,
 
     
   };

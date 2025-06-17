@@ -172,7 +172,7 @@ const RecipeDetailScreen = ({ route, navigation }) => {
                 <Text style={styles.likeText}>{likeCount} likes</Text>
               </TouchableOpacity>
               
-              {user?.role === 'admin' && (
+              {user?.role === 'admin' | user?.role === 'super_admin' && (
                 <View style={styles.adminControlsContainer}>
                   <Button title="Edit Recipe" onPress={() => navigation.navigate('EditRecipe', { recipeId: recipe.id })} />
                   <Button title="Delete Recipe" onPress={handleDeleteRecipe} color="#E53935" />

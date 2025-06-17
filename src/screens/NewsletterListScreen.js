@@ -47,7 +47,7 @@ const NewsletterListScreen = ({ navigation }) => {
         contentContainerStyle={styles.list}
       />
 
-      {user?.role === "admin" && (
+      {user?.role === "admin" | user?.role === 'super_admin' && (
         <TouchableOpacity
           style={styles.fab}
           onPress={() => navigation.navigate("CreateNewsletter")}

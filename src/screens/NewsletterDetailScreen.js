@@ -11,10 +11,10 @@ const NewsletterDetailScreen = ({ route }) => {
   const { newsletterId } = route.params;
   const { user, newsletters, deleteNewsletter } = useAppContext();
 
-  // Find the specific newsletter from the list in our context
+  
   const newsletter = newsletters.find(n => n.id === newsletterId);
 
-  // Handler for the delete button
+ 
   const handleDelete = () => {
     Alert.alert("Delete Newsletter", "Are you sure? This action cannot be undone.", [
       { text: "Cancel" },
@@ -23,16 +23,15 @@ const NewsletterDetailScreen = ({ route }) => {
         style: 'destructive', 
         onPress: async () => {
           await deleteNewsletter(newsletterId);
-          navigation.goBack(); // Go back to the list after deletion
+          navigation.goBack(); 
         }
       }
     ]);
   };
 
-  // --- ✅ THIS IS THE CORE OF THE RENDERER ---
-  // This function takes a block object and returns the correct React Native component
+ 
   const renderBlock = (block, index) => {
-    // Use a unique key for each item in the list
+   
     const key = `${block.type}-${block.id || index}`;
 
     switch (block.type) {
@@ -50,12 +49,12 @@ const NewsletterDetailScreen = ({ route }) => {
       case 'paragraph':
         return <Text key={key} style={styles.paragraph}>{block.text}</Text>;
       
-      // We don't render 'loading' blocks, but this is here as a safeguard
+     
       case 'loading':
         return <View key={key} style={styles.loadingBlock}><ActivityIndicator /></View>;
 
       default:
-        // Return null for any unknown block types
+       
         return null;
     }
   };
@@ -70,7 +69,7 @@ const NewsletterDetailScreen = ({ route }) => {
     );
   }
 
-  // Determine the source for the main hero image, with a fallback
+ 
   const heroImageSource = newsletter.imageUrl 
     ? { uri: newsletter.imageUrl } 
     : require('../../assets/pancakes.jpg');
@@ -93,7 +92,7 @@ const NewsletterDetailScreen = ({ route }) => {
             </Text>
           </View>
           
-          {user?.role === 'admin' && (
+          {user?.role === 'admin'| user?.role === 'super_admin' &&(
             <View style={styles.adminControls}>
               <Button title="Edit" onPress={() => navigation.navigate('EditNewsletter', { newsletterId: newsletter.id })} />
               <Button title="Delete" color="#E53935" onPress={handleDelete} />
@@ -102,8 +101,7 @@ const NewsletterDetailScreen = ({ route }) => {
           
           <View style={styles.separator} />
 
-          {/* --- ✅ RENDER THE RICH TEXT CONTENT --- */}
-          {/* We map over the `content` array from our database and render each block */}
+         
           {Array.isArray(newsletter.content) && newsletter.content.map((block, index) => 
             renderBlock(block, index)
           )}
@@ -125,7 +123,6 @@ const styles = StyleSheet.create({
   adminControls: { flexDirection: 'row', justifyContent: 'space-evenly', paddingVertical: 10, marginVertical: 10, backgroundColor: '#f0f0f0', borderRadius: 8 },
   separator: { height: 1, backgroundColor: '#e5e5e5', marginVertical: 15 },
   
-  // --- ✅ STYLES FOR THE RENDERED NATIVE COMPONENTS ---
   heading: {
     fontSize: 24,
     fontWeight: 'bold',

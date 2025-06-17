@@ -50,7 +50,7 @@ const ProfileScreen = () => {
 
           <Text style={styles.bioText}>{user.bio || "No bio available."}</Text>
         </View>
-
+        
         <View style={styles.logoutContainer}>
           <Button title="Logout" onPress={logout} color="red" />
         </View>

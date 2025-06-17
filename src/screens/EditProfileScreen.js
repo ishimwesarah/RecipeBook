@@ -29,17 +29,28 @@ const ProfileValidationSchema = Yup.object().shape({
 const EditProfileScreen = ({ navigation }) => {
   const { user: currentUser, updateUserProfile } = useAppContext();
 
-  if (!currentUser) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4CAF50" />
-      </View>
-    );
-  }
+ 
+ 
+  // ...
 
   const handleUpdate = async (values) => {
-    Alert.alert("Profile Updated", "Your changes have been saved.");
-    navigation.goBack();
+    setIsSubmitting(true);
+    try {
+      // The `values` object from Formik will be { name, email, bio }
+      // We rename `name` to `username` to match the backend.
+      const payload = {
+        username: values.name,
+        email: values.email,
+        bio: values.bio,
+      };
+      await updateUserProfile(currentUser.id, payload);
+      Alert.alert("Profile Updated", "Your changes have been saved.");
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert("Error", "Could not update your profile.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

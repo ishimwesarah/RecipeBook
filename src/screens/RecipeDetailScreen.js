@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   View, Text, StyleSheet, Image, Button, 
   TextInput, FlatList, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator 
@@ -13,20 +13,31 @@ const CommentItem = ({ comment, recipeId }) => {
   const [editText, setEditText] = useState(comment.text);
 
   // Determine user permissions for this specific comment.
-  const canDelete = user?.id === comment.author?.id || user?.role === 'admin';
+  const canDelete = user?.id === comment.author?.id || user?.role === 'admin' || user?.role === 'super_admin';
   const canEdit = user?.id === comment.author?.id;
 
   const handleDelete = () => {
     Alert.alert("Delete Comment", "Are you sure you want to delete this comment?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => deleteComment(recipeId, comment.id) },
+      { text: "Delete", style: "destructive", onPress: async () => {
+          try {
+            await deleteComment(recipeId, comment.id);
+          } catch (error) {
+            Alert.alert("Error", "Failed to delete comment");
+          }
+        }
+      },
     ]);
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (editText.trim()) {
-      updateComment(recipeId, comment.id, editText);
-      setIsEditing(false); // Close the editing input on save
+      try {
+        await updateComment(recipeId, comment.id, editText);
+        setIsEditing(false); // Close the editing input on save
+      } catch (error) {
+        Alert.alert("Error", "Failed to update comment");
+      }
     } else {
       Alert.alert("Cannot be empty", "Comment text cannot be empty.");
     }
@@ -83,7 +94,6 @@ const IngredientItem = ({ item, isSelected, onSelect }) => {
   );
 };
 
-
 // --- The Main Recipe Detail Screen Component ---
 const RecipeDetailScreen = ({ route, navigation }) => {
   const { recipeId } = route.params;
@@ -95,6 +105,8 @@ const RecipeDetailScreen = ({ route, navigation }) => {
   const [selectedIngredients, setSelectedIngredients] = useState([]);
   const [commentText, setCommentText] = useState('');
   const [isAddingToList, setIsAddingToList] = useState(false);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isTogglingLike, setIsTogglingLike] = useState(false);
 
   // --- HANDLERS ---
   const handleToggleIngredient = (ingredient) => {
@@ -116,31 +128,67 @@ const RecipeDetailScreen = ({ route, navigation }) => {
       setSelectedIngredients([]); // Clear selection on success
     } catch (error) {
       console.error("Error from UI while adding to list:", error);
+      Alert.alert("Error", "Failed to add items to shopping list");
     } finally {
       setIsAddingToList(false);
     }
   };
 
+  // --- useMemo with corrected dependency array ---
   const { isLikedByUser, likeCount } = useMemo(() => {
     if (!recipe?.likes) return { isLikedByUser: false, likeCount: 0 };
     return {
       isLikedByUser: recipe.likes.some(like => like.user?.id === user?.id),
       likeCount: recipe.likes.length,
     };
-  }, [recipe, user]);
+  }, [recipe?.likes, user?.id]); // More specific dependency
 
-  const handleAddComment = () => {
-    if (!commentText.trim()) return;
-    addComment(recipe.id, commentText);
+const handleToggleLike = async () => {
+  try {
+    if (!user) {
+      Alert.alert("Login Required", "Please login to like recipes");
+      navigation.navigate('Login');
+      return;
+    }
+    
+    await toggleLike(recipe.id);
+  } catch (error) {
+    console.error("Like error:", error);
+    Alert.alert("Error", error.message || "Failed to like recipe");
+  }
+};
+
+const handleAddComment = async () => {
+  try {
+    if (!user) {
+      Alert.alert("Login Required", "Please login to comment");
+      navigation.navigate('Login');
+      return;
+    }
+    
+    if (!commentText.trim()) {
+      Alert.alert("Error", "Comment cannot be empty");
+      return;
+    }
+    
+    await addComment(recipe.id, commentText);
     setCommentText('');
-  };
+  } catch (error) {
+    console.error("Comment error:", error);
+    Alert.alert("Error", error.message || "Failed to post comment");
+  }
+};
 
   const handleDeleteRecipe = () => {
     Alert.alert("Delete Recipe", "Are you sure? This action cannot be undone.", [
       { text: "Cancel" },
       { text: "Yes, Delete", style: "destructive", onPress: async () => {
-          await deleteRecipe(recipe.id);
-          navigation.goBack();
+          try {
+            await deleteRecipe(recipe.id);
+            navigation.goBack();
+          } catch (error) {
+            Alert.alert("Error", "Failed to delete recipe");
+          }
         } 
       },
     ]);
@@ -167,12 +215,24 @@ const RecipeDetailScreen = ({ route, navigation }) => {
             <View style={styles.content}>
               <Text style={styles.title}>{recipe.title}</Text>
               
-              <TouchableOpacity onPress={() => toggleLike(recipe.id)} style={styles.likeContainer} disabled={!user}>
-                <Ionicons name={isLikedByUser ? 'heart' : 'heart-outline'} size={28} color={isLikedByUser ? '#E91E63' : '#333'} />
+              <TouchableOpacity 
+                onPress={handleToggleLike} 
+                style={[styles.likeContainer, isTogglingLike && styles.disabled]} 
+                disabled={!user || isTogglingLike}
+              >
+                {isTogglingLike ? (
+                  <ActivityIndicator size="small" color="#E91E63" />
+                ) : (
+                  <Ionicons 
+                    name={isLikedByUser ? 'heart' : 'heart-outline'} 
+                    size={28} 
+                    color={isLikedByUser ? '#E91E63' : '#333'} 
+                  />
+                )}
                 <Text style={styles.likeText}>{likeCount} likes</Text>
               </TouchableOpacity>
               
-              {user?.role === 'admin' | user?.role === 'super_admin' && (
+              {(user?.role === 'admin' || user?.role === 'super_admin') && (
                 <View style={styles.adminControlsContainer}>
                   <Button title="Edit Recipe" onPress={() => navigation.navigate('EditRecipe', { recipeId: recipe.id })} />
                   <Button title="Delete Recipe" onPress={handleDeleteRecipe} color="#E53935" />
@@ -180,7 +240,7 @@ const RecipeDetailScreen = ({ route, navigation }) => {
               )}
 
               <Text style={styles.sectionTitle}>Ingredients</Text>
-              {recipe.ingredients.map((item, index) => (
+              {recipe.ingredients && recipe.ingredients.map((item, index) => (
                 <IngredientItem
                   key={`${item}-${index}`}
                   item={item}
@@ -189,24 +249,26 @@ const RecipeDetailScreen = ({ route, navigation }) => {
                 />
               ))}
               
-              <View style={styles.buttonContainer}>
-                {isAddingToList ? (
-                  <View style={styles.loadingWrapper}>
-                    <ActivityIndicator size="small" color="#4CAF50" />
-                    <Text style={styles.loadingText}>Adding to list...</Text>
-                  </View>
-                ) : (
-                  <Button 
-                    title={`Add ${selectedIngredients.length} Item(s) to List`}
-                    onPress={handleAddSelectedToList} 
-                    color="#4CAF50"
-                    disabled={selectedIngredients.length === 0}
-                  />
-                )}
-              </View>
+              {user?.role !== "super_admin" && (
+                <View style={styles.buttonContainer}>
+                  {isAddingToList ? (
+                    <View style={styles.loadingWrapper}>
+                      <ActivityIndicator size="small" color="#4CAF50" />
+                      <Text style={styles.loadingText}>Adding to list...</Text>
+                    </View>
+                  ) : (
+                    <Button 
+                      title={`Add ${selectedIngredients.length} Item(s) to List`}
+                      onPress={handleAddSelectedToList} 
+                      color="#4CAF50"
+                      disabled={selectedIngredients.length === 0}
+                    />
+                  )}
+                </View>
+              )}
 
               <Text style={styles.sectionTitle}>Instructions</Text>
-              {recipe.instructions.map((instruction, index) => (
+              {recipe.instructions && recipe.instructions.map((instruction, index) => (
                 <Text key={index} style={styles.instructionItem}>{index + 1}. {instruction}</Text>
               ))}
 
@@ -223,20 +285,32 @@ const RecipeDetailScreen = ({ route, navigation }) => {
           <View style={styles.content}>
             <View style={styles.commentInputContainer}>
               <TextInput 
-                style={styles.input} 
+                style={[styles.input, !user && styles.disabledInput]} 
                 placeholder={user ? "Write a comment..." : "Login to comment"} 
                 value={commentText} 
                 onChangeText={setCommentText} 
-                editable={!!user}
+                editable={!!user && !isSubmittingComment}
+                multiline
               />
-              <Button title="Post" onPress={handleAddComment} color="#4CAF50" disabled={!user} />
+              {isSubmittingComment ? (
+                <View style={styles.submitButtonContainer}>
+                  <ActivityIndicator size="small" color="#4CAF50" />
+                </View>
+              ) : (
+                <Button 
+                  title="Post" 
+                  onPress={handleAddComment} 
+                  color="#4CAF50" 
+                  disabled={!user || !commentText.trim()} 
+                />
+              )}
             </View>
           </View>
         }
         ListEmptyComponent={
-            <View style={styles.content}>
-                <Text style={styles.emptyCommentText}>No comments yet. Be the first!</Text>
-            </View>
+          <View style={styles.content}>
+            <Text style={styles.emptyCommentText}>No comments yet. Be the first!</Text>
+          </View>
         }
       />
     </SafeAreaView>
@@ -249,27 +323,107 @@ const styles = StyleSheet.create({
   image: { width: '100%', height: 250, backgroundColor: '#e0e0e0' },
   content: { paddingHorizontal: 20, paddingTop: 10 },
   title: { fontSize: 26, fontWeight: 'bold', marginBottom: 10, color: '#333' },
-  likeContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 15 },
+  likeContainer: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginVertical: 15,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+  },
   likeText: { marginLeft: 8, fontSize: 16, color: '#555' },
-  adminControlsContainer: { flexDirection: 'row', justifyContent: 'space-evenly', paddingVertical: 10, marginVertical: 10, backgroundColor: '#f0f0f0', borderRadius: 8 },
-  sectionTitle: { fontSize: 22, fontWeight: 'bold', marginTop: 20, marginBottom: 10, borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 5, color: '#333' },
+  disabled: { opacity: 0.6 },
+  adminControlsContainer: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-evenly', 
+    paddingVertical: 10, 
+    marginVertical: 10, 
+    backgroundColor: '#f0f0f0', 
+    borderRadius: 8 
+  },
+  sectionTitle: { 
+    fontSize: 22, 
+    fontWeight: 'bold', 
+    marginTop: 20, 
+    marginBottom: 10, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#eee', 
+    paddingBottom: 5, 
+    color: '#333' 
+  },
   instructionItem: { fontSize: 16, lineHeight: 26, marginBottom: 12, color: '#444' },
   buttonContainer: { marginVertical: 20 },
   ingredientRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
   listItem: { fontSize: 16, lineHeight: 26, color: '#444', marginLeft: 12 },
   ingredientSelected: { fontWeight: 'bold', color: '#4CAF50' },
-  loadingWrapper: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#e8f5e9', paddingVertical: 12, borderRadius: 8 },
+  loadingWrapper: { 
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: '#e8f5e9', 
+    paddingVertical: 12, 
+    borderRadius: 8 
+  },
   loadingText: { marginLeft: 10, fontSize: 16, color: '#388E3C', fontWeight: '500' },
   commentListContainer: { paddingHorizontal: 20 },
-  commentItem: { backgroundColor: '#f9f9f9', padding: 12, borderRadius: 8, marginBottom: 10, borderWidth: 1, borderColor: '#eee' },
-  commentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  commentItem: { 
+    backgroundColor: '#f9f9f9', 
+    padding: 12, 
+    borderRadius: 8, 
+    marginBottom: 10, 
+    borderWidth: 1, 
+    borderColor: '#eee' 
+  },
+  commentHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 8 
+  },
   commentAuthor: { fontWeight: 'bold', color: '#333' },
   commentActions: { flexDirection: 'row' },
   commentText: { fontSize: 16, color: '#333', lineHeight: 22 },
-  editInput: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', borderRadius: 5, padding: 10, marginBottom: 10, fontSize: 16 },
-  emptyCommentText: { color: '#888', fontStyle: 'italic', textAlign: 'center', paddingVertical: 20 },
-  commentInputContainer: { flexDirection: 'row', marginTop: 10, marginBottom: 40, alignItems: 'center' },
-  input: { flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginRight: 10, fontSize: 16 },
+  editInput: { 
+    backgroundColor: '#fff', 
+    borderWidth: 1, 
+    borderColor: '#ddd', 
+    borderRadius: 5, 
+    padding: 10, 
+    marginBottom: 10, 
+    fontSize: 16 
+  },
+  emptyCommentText: { 
+    color: '#888', 
+    fontStyle: 'italic', 
+    textAlign: 'center', 
+    paddingVertical: 20 
+  },
+  commentInputContainer: { 
+    flexDirection: 'row', 
+    marginTop: 10, 
+    marginBottom: 40, 
+    alignItems: 'flex-end' 
+  },
+  input: { 
+    flex: 1, 
+    borderWidth: 1, 
+    borderColor: '#ddd', 
+    borderRadius: 8, 
+    padding: 12, 
+    marginRight: 10, 
+    fontSize: 16,
+    maxHeight: 100,
+    minHeight: 44,
+  },
+  disabledInput: {
+    backgroundColor: '#f5f5f5',
+    color: '#999',
+  },
+  submitButtonContainer: {
+    padding: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 export default RecipeDetailScreen;

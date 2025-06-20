@@ -92,7 +92,7 @@ const NewsletterDetailScreen = ({ route }) => {
             </Text>
           </View>
           
-          {user?.role === 'admin'| user?.role === 'super_admin' &&(
+          {(user?.role === 'admin'|| user?.role === 'super_admin') &&(
             <View style={styles.adminControls}>
               <Button title="Edit" onPress={() => navigation.navigate('EditNewsletter', { newsletterId: newsletter.id })} />
               <Button title="Delete" color="#E53935" onPress={handleDelete} />

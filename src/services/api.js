@@ -7,6 +7,9 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
 });
 
+const getAuthToken = async () => {
+  return await AsyncStorage.getItem('userToken');
+};
 apiClient.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem("userToken");
@@ -66,12 +69,13 @@ export const deleteRecipeById = async (id) => {
   await apiClient.delete(`/recipes/delete/${id}`);
 };
 export const toggleRecipeLike = async (recipeId) => {
-  const response = await apiClient.post("/like/like");
+  const response = await apiClient.post(`/recipes/${recipeId}/like`);
   return response.data;
 };
 
+// Comments
 export const addCommentToRecipe = async (recipeId, text) => {
-  const response = await apiClient.post(`/comment/comments`, { text });
+  const response = await apiClient.post(`/recipes/${recipeId}/comments`, { text });
   return response.data;
 };
 
@@ -135,11 +139,6 @@ export const getAllUsers = async () => {
   return response.data;
 };
 
-export const updateUserProfile = async (userId, profileData) => {
- 
-  const response = await apiClient.put(`/users/${userId}`, profileData);
-  return response.data;
-};
 
 export const changeUserRoleById = async (userId, role) => {
   const response = await apiClient.patch(`/users/${userId}/role`, { role });
@@ -148,8 +147,30 @@ export const changeUserRoleById = async (userId, role) => {
 export const deleteUserById = async (userId) => {
   await apiClient.delete(`/users/${userId}`);
 };
-
+export const inviteNewUser = async (userData) => {
+  // userData will be an object like { username, email, role }
+  const response = await apiClient.post('/users/invite', userData);
+  return response.data;
+};
 // ...
+export const getMyProfile = async () => {
+  const response = await apiClient.get('/users/profile/me');
+  return response.data;
+};
 
+// This sends the updated profile data, including an optional image.
+export const updateMyProfile = async (formData) => {
+  const response = await apiClient.put('/users/profile/me', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data', // Crucial for file uploads
+    },
+  });
+  return response.data;
+};
 
+export const getDashboardStats = async () => {
+  // Calls GET /stats
+  const response = await apiClient.get('/stats');
+  return response.data;
+};
 export default apiClient;

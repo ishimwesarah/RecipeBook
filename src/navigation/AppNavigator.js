@@ -25,6 +25,11 @@ import ProfileScreen from "../screens/ProfileScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
 import UserManagementScreen from "../screens/UserManagementScreen";
 import CreateUserScreen from "../screens/CreateUserScreen";
+import VerifyEmailScreen from "../screens/VerifyEmailScreen";
+import SetupAccountScreen from "../screens/SetupAccountScreen";
+import EmailVerifiedScreen from "../screens/EmailVerifiedScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import SuperAdminDashboard from "../screens/SuperAdminDashboard";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -52,6 +57,7 @@ const ProfileStackNavigator = () => (
   <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: "#4CAF50" }, headerTintColor: "#fff" }}>
     <Stack.Screen name="ProfileView" component={ProfileScreen} options={{ title: "My Profile" }}/>
     <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: "Edit Profile" }}/>
+    <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
     {/* The UserManagement screen now correctly lives in its own stack */}
   </Stack.Navigator>
 );
@@ -63,8 +69,6 @@ const UserManagementStackNavigator = () => (
     </Stack.Navigator>
 );
 
-
-// --- The Main Tab Navigator for Logged-In Users ---
 const MainTabs = () => {
   const { user } = useAppContext();
 
@@ -80,6 +84,7 @@ const MainTabs = () => {
 
   return (
     <Tab.Navigator
+    
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName = 'ellipse-outline'; // A default icon
@@ -99,8 +104,8 @@ const MainTabs = () => {
     >
       <Tab.Screen name="Recipes" component={RecipeStackNavigator} options={{ headerShown: false }}/>
 
-      {/* --- ✅ CORRECTED CONDITIONAL TABS --- */}
-      {/* Show "Add Recipe" tab if user is admin OR super_admin */}
+     
+
       {isAdmin && (
         <Tab.Screen name="Add Recipe" component={AddRecipeScreen} options={{ title: 'Add Recipe' }} />
       )}
@@ -128,8 +133,19 @@ const AuthStack = () => (
     <Stack.Screen name="Welcome" component={WelcomeScreen} />
     <Stack.Screen name="Login" component={LoginScreen} />
     <Stack.Screen name="Signup" component={SignupScreen} />
+    <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
     <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+    <Stack.Screen name="SetupAccount" component={SetupAccountScreen} />
+    <Stack.Screen name="EmailVerified" component={EmailVerifiedScreen} />
+  </Stack.Navigator>
+);
+const SuperAdminStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    {/* The first screen is the Dashboard */}
+    <Stack.Screen name="SuperAdminDashboard" component={SuperAdminDashboard} />
+    {/* The second screen is the entire tab-based application */}
+    <Stack.Screen name="MainAppTabs" component={MainTabs} />
   </Stack.Navigator>
 );
 
@@ -146,11 +162,16 @@ const AppNavigator = () => {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {user ? (
-        <Stack.Screen name="MainApp" component={MainTabs} />
-      ) : (
+   <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!user ? (
+        // If NO user, show the authentication flow.
         <Stack.Screen name="Auth" component={AuthStack} />
+      ) : user.role === 'super_admin' ? (
+        // If the user IS a super_admin, show their special stack that starts with the dashboard.
+        <Stack.Screen name="SuperAdminFlow" component={SuperAdminStack} />
+      ) : (
+        // For all other logged-in users (admin, user), show the regular tabs.
+        <Stack.Screen name="MainApp" component={MainTabs} />
       )}
     </Stack.Navigator>
   );

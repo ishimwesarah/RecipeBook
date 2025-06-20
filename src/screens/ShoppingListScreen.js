@@ -8,7 +8,9 @@ import {
   Alert,
   SafeAreaView,
   ActivityIndicator,
+  Animated,
 } from "react-native";
+import { RectButton, Swipeable } from "react-native-gesture-handler";
 import { useAppContext } from "../context/AppContext";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -35,30 +37,56 @@ const ShoppingListScreen = () => {
     );
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.listItem}>
-      <TouchableOpacity
-        onPress={() => toggleShoppingListItem(item.id)}
-        style={styles.itemContent}
-      >
-        <Ionicons
-          name={item.isChecked ? "checkbox" : "square-outline"}
-          size={26}
-          color={item.isChecked ? "#4CAF50" : "#333"}
-        />
-        <Text
-          style={[styles.itemText, item.isChecked && styles.itemTextChecked]}
-        >
-          {item.item}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
+  const renderRightActions = (progress, dragX, item) => {
+    const trans = dragX.interpolate({
+      inputRange: [0, 50, 100, 101],
+      outputRange: [0, 0, 0, 1],
+    });
+
+    return (
+      <RectButton
+        style={styles.rightAction}
         onPress={() => handleDelete(item)}
-        style={styles.deleteButton}
       >
-        <Ionicons name="trash-bin-outline" size={24} color="#E53935" />
-      </TouchableOpacity>
-    </View>
+        <Animated.View
+          style={[
+            styles.actionIcon,
+            {
+              transform: [{ translateX: trans }],
+            },
+          ]}
+        >
+          <Ionicons name="trash-bin" size={24} color="white" />
+        </Animated.View>
+      </RectButton>
+    );
+  };
+
+  const renderItem = ({ item }) => (
+    <Swipeable
+      renderRightActions={(progress, dragX) =>
+        renderRightActions(progress, dragX, item)
+      }
+      rightThreshold={40}
+    >
+      <View style={styles.listItem}>
+        <TouchableOpacity
+          onPress={() => toggleShoppingListItem(item.id)}
+          style={styles.itemContent}
+        >
+          <Ionicons
+            name={item.isChecked ? "checkbox" : "square-outline"}
+            size={26}
+            color={item.isChecked ? "#4CAF50" : "#333"}
+          />
+          <Text
+            style={[styles.itemText, item.isChecked && styles.itemTextChecked]}
+          >
+            {item.item}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </Swipeable>
   );
 
   if (isLoading) {
@@ -107,6 +135,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 15,
     paddingHorizontal: 20,
+    backgroundColor: "white",
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
@@ -124,9 +153,16 @@ const styles = StyleSheet.create({
     textDecorationLine: "line-through",
     color: "#aaa",
   },
-  deleteButton: {
-    padding: 8,
-    marginLeft: 10,
+  rightAction: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#E53935",
+    width: 80,
+    height: "100%",
+  },
+  actionIcon: {
+    width: 30,
+    marginHorizontal: 10,
   },
   emptyText: {
     textAlign: "center",

@@ -83,8 +83,7 @@ const UserManagementScreen = () => {
     setLoading(false);
   }, [fetchAllUsers]);
   
-  // useFocusEffect re-fetches data every time the screen comes into view,
-  // ensuring the list is fresh after creating a new user.
+
   useFocusEffect(useCallback(() => {
     loadUsers();
   }, [loadUsers]));

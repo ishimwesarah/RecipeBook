@@ -4,10 +4,11 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { StatusBar } from 'expo-status-bar';
 import { AppProvider } from './src/context/AppContext';
 
+
 export default function App() {
   return (
     <AppProvider>
-      <NavigationContainer>
+      <NavigationContainer >
         <StatusBar style="light" />
         <AppNavigator />
       </NavigationContainer>

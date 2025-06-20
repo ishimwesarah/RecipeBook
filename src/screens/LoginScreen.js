@@ -34,9 +34,16 @@ const LoginScreen = () => {
     try {
       await login(values.email, values.password);
     } catch (error) {
-      const message =
-        error.response?.data?.message ||
-        "An unknown error occurred. Please try again.";
+      // --- ✅ BETTER ERROR LOGGING ---
+      console.error("--- LOGIN FAILED ---");
+      // Axios puts network errors in the `message` field
+      if (error.message === 'Network Error') {
+        console.error("This is a network or connection error. Check the IP address in api.js.");
+      }
+      // Log the full error to see all details
+      console.error(error);
+      
+      const message = error.response?.data?.message || "An unknown error occurred. Please try again.";
       Alert.alert("Login Failed", message);
     } finally {
       setIsLoading(false);
